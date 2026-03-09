@@ -251,6 +251,11 @@ class EnhancedEnergyEnv(gym.Env):
                                                   self.current_hour, 
                                                   occupancy)
         
+        # Add slight stochastic sensory noise to temperature for comfort realism
+        if self.stochastic:
+            thermal_result['temperature'] += np.random.normal(0, 0.15)
+
+        
         # Record metrics
         energy_kwh = thermal_result['energy_kwh']
         energy_cost = energy_kwh * self.get_tariff(self.current_hour)

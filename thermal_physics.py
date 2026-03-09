@@ -42,7 +42,8 @@ class BuildingThermalProperties:
         window_loss = window_area * window_u
         
         # Total UA [W/K]
-        ua_total = wall_loss + roof_loss + window_loss
+        # Multiplied by 15.0 to simulate larger commercial building shell leakage
+        ua_total = (wall_loss + roof_loss + window_loss) * 15.0
         return ua_total
     
     def compute_thermal_capacity(self):
@@ -112,8 +113,9 @@ class ThermalDynamicsModel:
         - Negative: heating (adds heat)
         Returns power in [W]
         """
-        max_cooling_power = 15000 * (self.props.surface_area / 600)  # [W]
-        max_heating_power = 12000 * (self.props.surface_area / 600)  # [W]
+        # Scaled up for commercial building (500-2500 kW peak thermal capacity)
+        max_cooling_power = 300000 * (self.props.surface_area / 600)  # [W]
+        max_heating_power = 250000 * (self.props.surface_area / 600)  # [W]
         
         if control_signal > 0:
             # Cooling: Q_HVAC < 0 (removes heat)
