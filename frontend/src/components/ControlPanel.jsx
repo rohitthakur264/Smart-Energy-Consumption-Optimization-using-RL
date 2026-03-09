@@ -13,11 +13,14 @@ export default function ControlPanel({
     setProvider(val);
     
     if (val === 'default') {
-      setTariffRates({ peak: 5.0, mid: 3.5, offPeak: 2.0 });
+      setTariffRates({ peak: 6.5, mid: 4.5, offPeak: 3.5 });
     } else if (val === 'adani') {
-      setTariffRates({ peak: 10.0, mid: 7.5, offPeak: 5.5 });
+      // 2024-2025 Adani Electricity Mumbai HT Commercial ToD Tariffs
+      setTariffRates({ peak: 9.50, mid: 8.50, offPeak: 7.75 });
     } else if (val === 'tata') {
-      setTariffRates({ peak: 8.5, mid: 6.0, offPeak: 4.0 });
+      // 2024-2025 Tata Power Mumbai Commercial ToD Tariffs (Base energy charges + ToD Adjustment)
+      // Peak (+1.00), Mid (+0.00 / +0.50), Off-Peak (-0.75)
+      setTariffRates({ peak: 8.75, mid: 7.75, offPeak: 7.00 });
     }
   };
   return (

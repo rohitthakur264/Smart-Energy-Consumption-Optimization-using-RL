@@ -17,7 +17,7 @@ export default function Dashboard() {
   const [metrics, setMetrics] = useState(null);
   const [apiStatus, setApiStatus] = useState(null);
   const [provider, setProvider] = useState('default');
-  const [tariffRates, setTariffRates] = useState({ peak: 5.0, mid: 3.5, offPeak: 2.0 });
+  const [tariffRates, setTariffRates] = useState({ peak: 6.5, mid: 4.5, offPeak: 3.5 });
   const [generatingDataset, setGeneratingDataset] = useState(false);
   const [uploadingDataset, setUploadingDataset] = useState(false);
 
