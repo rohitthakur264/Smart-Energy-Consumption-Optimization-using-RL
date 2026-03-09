@@ -75,7 +75,8 @@ class RLController:
         baseline_energy = 0.0
         
         for day in range(num_days):
-            obs, _ = env.reset()
+            # Reset with fixed seed and fixed building for reproducibility
+            obs, _ = env.reset(seed=42 + day, options={'building_idx': 0, 'start_hour': 0})
             done = False
             
             while not done:

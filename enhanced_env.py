@@ -180,10 +180,20 @@ class EnhancedEnergyEnv(gym.Env):
             return float(self.tariff_rates.get('off_peak', 2.0))
     
     def reset(self, seed=None, options=None):
-        super().reset(seed=seed)
+        """
+        Reset with optional seed and specific building/hour options.
+        options can include: 'building_idx' and 'start_hour'
+        """
+        if seed is not None:
+            super().reset(seed=seed)
+            np.random.seed(seed)
         
-        # Select random building from UCI dataset
-        self.building_idx = np.random.randint(0, len(self.df))
+        # Select building (deterministic if options provided, otherwise random)
+        if options and 'building_idx' in options:
+            self.building_idx = options['building_idx'] % len(self.df)
+        else:
+            self.building_idx = np.random.randint(0, len(self.df))
+            
         building_data = self.df.iloc[self.building_idx]
         
         # Extract building properties
@@ -201,8 +211,12 @@ class EnhancedEnergyEnv(gym.Env):
         # Initialize thermal model
         self.thermal_model = ThermalDynamicsModel(self.building_props)
         
-        # Reset episode state
-        self.current_hour = np.random.randint(0, 24)  # Start at random hour
+        # Start hour (deterministic if options provided)
+        if options and 'start_hour' in options:
+            self.current_hour = options['start_hour'] % 24
+        else:
+            self.current_hour = 0 # Default to midnight for cleaner dashboarding
+            
         self.total_steps = 0
         self.max_episode_steps = 24  # One full day
         self.episode_metrics = {
