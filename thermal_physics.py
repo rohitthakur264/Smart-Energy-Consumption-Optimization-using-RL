@@ -83,13 +83,15 @@ class ThermalDynamicsModel:
         Compute solar heat gain and internal heat gains.
         Returns heat gain in [W]
         """
-        # Solar gain: peaks at noon, depends on orientation
-        solar_peak = 150 * self.props.glazing_area  # [W] - window area effect
-        solar_gain = solar_peak * max(0, np.sin((hour - 6) * np.pi / 12))
+        # Solar gain: commercial intensity (W/m2)
+        # 1000 W/m2 is solar constant, ~100-300 W/m2 effective through windows
+        solar_intensity = 250 * self.props.glazing_area  # [W/m2]
+        solar_gain = solar_intensity * self.props.wall_area * max(0, np.sin((hour - 6) * np.pi / 12))
         
-        # Internal gains: occupants (100W/person), equipment (lighting, appliances)
-        occupants_in_space = max(int(occupancy * 10), 0)  # 0-10 people
-        internal_gains = occupants_in_space * 100 + 50  # [W] - base equipment
+        # Internal gains: occupants + commercial equipment (PCs, Servers, Lighting)
+        # Commercial standard: ~15-25 W/m2
+        equipment_gains = 20 * self.props.surface_area * occupancy 
+        internal_gains = (occupancy * 150) + equipment_gains + 500 # [W]
         
         return solar_gain + internal_gains
     
@@ -126,21 +128,24 @@ class ThermalDynamicsModel:
         
         return power
     
-    def compute_energy_consumption(self, hvac_power: float) -> float:
+    def compute_energy_consumption(self, hvac_power: float, T_ambient: float) -> float:
         """
-        Calculate electrical energy consumption from HVAC power output.
-        COP (Coefficient of Performance):
-        - Cooling COP ~= 3.5 (modern air conditioning)
-        - Heating COP ~= 3.0 (heat pump) or 0.95 (resistance, less efficient)
-        
-        Returns energy in [kWh] for 1-hour timestep
+        Calculate electrical energy consumption with Temperature-Dependent COP.
+        Real HVACs lose efficiency at extreme outdoor temperatures.
         """
-        if hvac_power > 0:  # Heating
-            cop = 3.0
-        elif hvac_power < 0:  # Cooling
-            cop = 3.5
-        else:
+        if hvac_power == 0:
             return 0.0
+            
+        if hvac_power > 0:  # Heating
+            # Efficiency drops as it gets colder outside
+            base_cop = 3.0
+            temp_penalty = max(0, (10 - T_ambient) * 0.04)
+            cop = max(1.2, base_cop - temp_penalty)
+        else:  # Cooling
+            # Efficiency drops as it gets hotter outside
+            base_cop = 3.5
+            temp_penalty = max(0, (T_ambient - 28) * 0.06)
+            cop = max(1.5, base_cop - temp_penalty)
         
         # Electrical power = thermal power / COP
         electrical_power = abs(hvac_power) / cop  # [W]
@@ -169,7 +174,7 @@ class ThermalDynamicsModel:
         self.T_indoor = np.clip(self.T_indoor, 5, 45)  # Physical bounds
         
         # Energy metrics
-        energy_consumption = self.compute_energy_consumption(hvac_power)
+        energy_consumption = self.compute_energy_consumption(hvac_power, ambient_temp)
         
         return {
             'temperature': self.T_indoor,
