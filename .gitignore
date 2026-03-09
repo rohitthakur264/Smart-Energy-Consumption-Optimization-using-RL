@@ -1,0 +1,24 @@
+# Environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.ipynb_checkpoints/
+
+# Node
+node_modules/
+frontend/dist/
+npm-debug.log*
+
+# Models (Keep small config/checkpoints if needed, but usually ignore heavy large weights)
+# models/*.zip
+
+# Uploads and temporary data
+uploads/
+synthetic_energy_data.csv
+adani_synthetic_dataset.csv
+
+# OS
+.DS_Store
+Thumbs.db
