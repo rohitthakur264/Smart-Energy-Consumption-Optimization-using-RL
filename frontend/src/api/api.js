@@ -3,7 +3,8 @@
  * Communicates with FastAPI backend for real-time simulation data.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Use relative URL in production (served from same domain)
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 /**
  * Run a building energy simulation.
