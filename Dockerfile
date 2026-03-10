@@ -12,11 +12,16 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
+# Set pip options for better network handling
+ENV PIP_TIMEOUT=60 \
+    PIP_RETRIES=3 \
+    PIP_RETRY_DELAY=5
+
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with retry and timeout
+RUN pip install --no-cache-dir --timeout=60 --retries=3 -r requirements.txt
 
 # Copy the rest of the application code
 COPY . .

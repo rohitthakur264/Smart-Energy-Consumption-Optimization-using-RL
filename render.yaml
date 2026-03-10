@@ -2,5 +2,13 @@ services:
   - type: web
     name: smart-energy-api
     env: python
-    buildCommand: pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
-    startCommand: python app.py
+    buildCommand: pip install --timeout=60 --retries=3 -r requirements.txt
+    startCommand: gunicorn -w 1 -k uvicorn.workers.UvicornWorker backend.main:app --bind 0.0.0.0:$PORT --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: PIP_TIMEOUT
+        value: "60"
+      - key: PIP_RETRIES
+        value: "3"
+
