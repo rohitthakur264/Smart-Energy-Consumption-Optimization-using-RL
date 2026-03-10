@@ -14,7 +14,7 @@ sys.path.insert(0, PROJECT_ROOT)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 
 app = FastAPI(
     title="Smart Energy RL Optimization API",
@@ -55,6 +55,13 @@ if os.path.exists(dist_assets):
 @app.get("/{full_path:path}")
 async def serve_frontend(full_path: str):
     dist_dir = os.path.join(PROJECT_ROOT, "frontend", "dist")
+    
+    # If frontend build is missing (e.g. Vercel deployment), redirect root to API docs
+    if not os.path.exists(dist_dir) or not os.path.exists(os.path.join(dist_dir, "index.html")):
+        if full_path == "" or full_path == "/":
+            return RedirectResponse(url="/docs")
+        return {"error": "Frontend build not found. API is running. Visit /docs for documentation."}
+
     file_path = os.path.join(dist_dir, full_path)
     if os.path.isfile(file_path):
         return FileResponse(file_path)
@@ -63,4 +70,4 @@ async def serve_frontend(full_path: str):
     if os.path.isfile(index_path):
         return FileResponse(index_path)
         
-    return {"error": "Frontend build not found. Please run 'npm run build' in the frontend directory."}
+    return {"error": "File not found"}
