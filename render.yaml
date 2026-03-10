@@ -6,7 +6,7 @@ services:
     startCommand: gunicorn -w 1 -k uvicorn.workers.UvicornWorker backend.main:app --bind 0.0.0.0:$PORT --timeout 120
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.0
+        value: "3.10"
       - key: PIP_TIMEOUT
         value: "60"
       - key: PIP_RETRIES
