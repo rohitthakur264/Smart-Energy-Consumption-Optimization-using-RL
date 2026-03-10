@@ -2,7 +2,7 @@ services:
   - type: web
     name: smart-energy-api
     env: python
-    buildCommand: pip install --timeout=60 --retries=3 -r requirements.txt
+    buildCommand: apt-get update && apt-get install -y gfortran && pip install --timeout=60 --retries=3 -r requirements.txt
     startCommand: gunicorn -w 1 -k uvicorn.workers.UvicornWorker backend.main:app --bind 0.0.0.0:$PORT --timeout 120
     envVars:
       - key: PYTHON_VERSION
