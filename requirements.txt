@@ -1,45 +1,47 @@
 # IEEE Transactions Level Building Energy Management System
 # Python 3.10+ Required
 
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 # Core ML/RL
-stable-baselines3>=2.0.0
-gymnasium>=0.28.0
-numpy>=1.24.0
-scipy>=1.10.0
+torch==2.2.2
+stable-baselines3==2.3.2
+gymnasium==0.29.1
+numpy==1.26.4
+scipy==1.13.0
 
 # Data Processing
-pandas>=2.0.0
-scikit-learn>=1.3.0
+pandas==2.2.2
+scikit-learn==1.4.2
 
 # Visualization
-matplotlib>=3.7.0
-plotly>=5.14.0
-gradio>=3.41.0
+matplotlib==3.8.4
+plotly==5.19.0
+gradio==4.36.1
 
 # Optimization & Physics
-numba>=0.57.0
-pydantic>=2.0.0
+numba==0.59.1
+pydantic==2.7.1
 
 # Utilities
-joblib>=1.3.0
-pyyaml>=6.0
-tqdm>=4.66.0
+joblib==1.4.2
+pyyaml==6.0.1
+tqdm==4.66.4
 
 # Optional: Development & Visualization
-tensorboard>=2.13.0
-jupyter>=1.0.0
-ipython>=8.16.0
+tensorboard==2.16.2
+jupyter==1.0.2
+ipython==8.23.0
 
 # Dataset handling
-openpyxl>=3.1.0  # For Excel files
-xlrd>=2.0.1      # For reading Excel
+openpyxl==3.1.2
+xlrd==2.0.1
 
 # Performance
-opencv-python>=4.8.0  # For image processing if needed
+opencv-python==4.9.0.80
 
 # Web Server (FastAPI)
-fastapi>=0.100.0
-uvicorn[standard]>=0.23.0
-gunicorn>=21.2.0
-python-multipart>=0.0.6
-shutil; python_version < "3.10"
+fastapi==0.110.3
+uvicorn[standard]==0.29.0
+gunicorn==21.2.0
+python-multipart==0.0.9
