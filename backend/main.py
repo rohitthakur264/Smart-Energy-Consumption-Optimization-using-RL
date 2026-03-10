@@ -2,8 +2,10 @@
 Smart Energy RL Platform — FastAPI Backend
 Serves the RL simulation engine and trained models via REST API.
 """
-import sys
 import os
+import matplotlib
+matplotlib.use('Agg') # Prevent font cache and GUI issues
+import sys
 
 # Add project root to path for imports
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -19,6 +21,8 @@ app = FastAPI(
     description="IEEE Transactions Level Building Energy Management System — REST API",
     version="2.0.0",
 )
+
+print("Starting Smart Energy API...")
 
 # CORS — allow frontend dev server
 app.add_middleware(
