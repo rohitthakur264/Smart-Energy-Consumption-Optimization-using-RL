@@ -40,5 +40,6 @@ opencv-python>=4.8.0  # For image processing if needed
 # Web Server (FastAPI)
 fastapi>=0.100.0
 uvicorn[standard]>=0.23.0
+gunicorn>=21.2.0
 python-multipart>=0.0.6
 shutil; python_version < "3.10"
