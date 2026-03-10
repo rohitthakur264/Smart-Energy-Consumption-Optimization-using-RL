@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+
+# Frontend build artifacts (will be built in Docker)
+frontend/node_modules
+frontend/dist
+frontend/package-lock.json
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.venv
+venv/
+ENV/
+env/
+.eggs
+*.egg-info
+*.egg
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs
+logs
+*.log
+
+# Data (will be copied separately if needed)
+*.xlsx
+*.csv
+
+# OS
+.DS_Store
+Thumbs.db
+
