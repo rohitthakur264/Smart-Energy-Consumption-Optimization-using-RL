@@ -46,6 +46,11 @@ def root():
         "endpoints": ["/api/simulate", "/api/evaluate", "/api/compare", "/api/status"],
     }
 
+@app.get("/health")
+def health_check():
+    """Lightweight health check for Render."""
+    return {"status": "ok"}
+
 # Serve React frontend assets
 dist_assets = os.path.join(PROJECT_ROOT, "frontend", "dist", "assets")
 if os.path.exists(dist_assets):

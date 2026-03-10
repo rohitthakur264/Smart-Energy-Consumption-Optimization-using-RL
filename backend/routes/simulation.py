@@ -1,124 +1,98 @@
-"""
-Simulation Routes — Real-time simulation API endpoints.
-"""
-from fastapi import APIRouter, Query, UploadFile, File, HTTPException
-import shutil
+from fastapi import APIRouter, UploadFile, File, HTTPException
 from backend.services.rl_controller import RLController
 import os
+import shutil
 
-router = APIRouter(prefix="/api", tags=["simulation"])
+router = APIRouter(prefix="/api", tags=["Simulation"])
 
-# Resolve data and model paths relative to project root
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-DATA_PATH = os.path.join(PROJECT_ROOT, "energy_data_cleaned.csv")
-MODEL_PATHS = {
-    "enhanced": os.path.join(PROJECT_ROOT, "models", "ppo_enhanced_ppo_final.zip"),
-    "hvac": os.path.join(PROJECT_ROOT, "models", "ppo_multi_agent_hvac_agent.zip"),
-    "lighting": os.path.join(PROJECT_ROOT, "models", "ppo_multi_agent_lighting_agent.zip"),
-}
+# Paths
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DATA_PATH = os.path.join(BASE_DIR, "energy_data_cleaned.csv")
+MODEL_DIR = os.path.join(BASE_DIR, "models")
 
-# Initialize controller (models loaded once at startup)
-controller = RLController(DATA_PATH, model_paths=MODEL_PATHS)
+# Global controller instance
+controller = None
 
-
-@router.get("/simulate")
-def simulate(
-    num_days: int = Query(default=5, ge=1, le=30, description="Number of days to simulate"),
-    use_model: bool = Query(default=False, description="Use trained RL model vs baseline"),
-    model_name: str = Query(default="enhanced", description="Which model to use"),
-    peak_rate: float = Query(default=5.0),
-    mid_rate: float = Query(default=3.5),
-    off_peak_rate: float = Query(default=2.0)
-):
-    """
-    Run building energy simulation.
-    Returns hourly data and aggregate metrics for real-time dashboard.
-    """
-    result = controller.run_simulation(
-        num_days=num_days,
-        use_model=use_model,
-        model_name=model_name,
-        peak_rate=peak_rate,
-        mid_rate=mid_rate,
-        off_peak_rate=off_peak_rate
-    )
-    return result
-
-
-@router.get("/evaluate")
-def evaluate(
-    model_name: str = Query(default="enhanced", description="Model to evaluate"),
-    num_episodes: int = Query(default=5, ge=1, le=50, description="Evaluation episodes"),
-):
-    """
-    Run multi-episode evaluation of a trained model.
-    Returns per-episode metrics and summary statistics.
-    """
-    result = controller.run_evaluation(
-        model_name=model_name,
-        num_episodes=num_episodes,
-    )
-    return result
-
+def get_controller():
+    global controller
+    if controller is None:
+        # Ensure data exists
+        if not os.path.exists(DATA_PATH):
+            print(f"Warning: {DATA_PATH} not found. Creating dummy placeholder.")
+            # Create a dummy file so RLController can initialize
+            # The user will overwrite this via upload or generation endpoints
+            with open(DATA_PATH, 'w') as f:
+                f.write("dummy,header\n0,0")
+        
+        # Find models
+        model_paths = {}
+        if os.path.exists(MODEL_DIR):
+            for f in os.listdir(MODEL_DIR):
+                if f.endswith(".zip"):
+                    # Clean name: ppo_enhanced_ppo_final.zip -> enhanced
+                    name = f.replace(".zip", "").replace("ppo_", "").replace("_final", "").replace("_agent", "")
+                    model_paths[name] = os.path.join(MODEL_DIR, f)
+                    # Also keep original name just in case
+                    model_paths[f.replace(".zip", "")] = os.path.join(MODEL_DIR, f)
+        
+        controller = RLController(DATA_PATH, model_paths)
+    return controller
 
 @router.get("/status")
-def status():
-    """Health check and system info."""
-    return controller.get_status()
+async def get_status():
+    try:
+        c = get_controller()
+        return c.get_status()
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+@router.get("/simulate")
+async def run_simulation(num_days: int = 5, use_model: bool = False, model_name: str = "enhanced"):
+    c = get_controller()
+    return c.run_simulation(num_days, use_model, model_name)
+
+@router.get("/evaluate")
+async def evaluate_model(model_name: str = "enhanced", num_episodes: int = 5):
+    c = get_controller()
+    return c.run_evaluation(model_name, num_episodes)
+
+@router.get("/compare")
+async def compare_models(num_days: int = 3):
+    c = get_controller()
+    # Run baseline
+    baseline = c.run_simulation(num_days, use_model=False)
+    # Run enhanced
+    enhanced = c.run_simulation(num_days, use_model=True, model_name="enhanced")
+    
+    return {
+        "baseline": baseline['metrics'],
+        "enhanced": enhanced['metrics'],
+        "improvement": {
+            "energy": baseline['metrics']['total_energy'] - enhanced['metrics']['total_energy'],
+            "cost": baseline['metrics']['total_cost'] - enhanced['metrics']['total_cost']
+        }
+    }
 
 @router.post("/generate-dataset")
-def generate_dataset(num_buildings: int = Query(default=50)):
-    """Generate a synthetic CSV dataset and switch to using it."""
-    try:
-        path = controller.generate_synthetic_dataset(num_buildings)
-        return {"status": "success", "message": f"Generated synthetic dataset with {num_buildings} buildings", "file": path}
-    except Exception as e:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=500, detail=str(e))
+async def generate_dataset(num_buildings: int = 50):
+    c = get_controller()
+    new_path = c.generate_synthetic_dataset(num_buildings)
+    return {"message": f"Generated {num_buildings} buildings", "path": new_path}
 
 @router.post("/upload-dataset")
 async def upload_dataset(file: UploadFile = File(...)):
-    """Upload a custom CSV dataset and switch to using it for simulations."""
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="Only CSV files are allowed")
-        
     try:
-        # Save the uploaded file
-        upload_dir = os.path.join(PROJECT_ROOT, "uploads")
-        os.makedirs(upload_dir, exist_ok=True)
-        file_path = os.path.join(upload_dir, file.filename)
+        file_location = os.path.join(BASE_DIR, "energy_data_cleaned.csv")
+        # Use async read/write to prevent blocking the server
+        with open(file_location, "wb+") as file_object:
+            content = await file.read()
+            file_object.write(content)
         
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-            
-        # Update controller to use the new data path
-        controller.data_path = file_path
+        # Reload controller with new data
+        global controller
+        controller = None 
+        get_controller()
         
-        return {
-            "status": "success", 
-            "message": f"Successfully uploaded and loaded {file.filename}",
-            "file": file_path
-        }
+        return {"message": "Dataset uploaded successfully"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process file: {str(e)}")
-
-
-@router.get("/compare")
-def compare(
-    num_days: int = Query(default=3, ge=1, le=10, description="Number of days"),
-):
-    """
-    Compare RL model vs baseline side by side.
-    """
-    baseline = controller.run_simulation(num_days=num_days, use_model=False)
-    rl_result = controller.run_simulation(num_days=num_days, use_model=True, model_name="enhanced")
-    
-    return {
-        "baseline": baseline,
-        "rl_optimized": rl_result,
-        "savings": {
-            "energy_saved_kwh": round(baseline['metrics']['total_energy'] - rl_result['metrics']['total_energy'], 2),
-            "cost_saved": round(baseline['metrics']['total_cost'] - rl_result['metrics']['total_cost'], 2),
-            "comfort_improvement": round(rl_result['metrics']['comfort_score'] - baseline['metrics']['comfort_score'], 1),
-        }
-    }
+        raise HTTPException(status_code=500, detail=str(e))

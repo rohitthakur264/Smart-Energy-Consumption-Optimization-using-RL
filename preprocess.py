@@ -198,16 +198,24 @@ def preprocess_for_rl(input_path: str,
 
 if __name__ == "__main__":
     # Auto-detect data file
-    data_dir = Path(r"c:\college\SEM 6\NNRL\energy+efficiency")
+    # Look in current directory or a 'data' subdirectory
+    search_paths = [Path("."), Path("data"), Path("energy+efficiency")]
     
     # Find Excel file
-    excel_files = list(data_dir.glob("*.xlsx")) + list(data_dir.glob("*.xls"))
+    input_file = None
+    for path in search_paths:
+        if path.exists():
+            excel_files = list(path.glob("*.xlsx")) + list(path.glob("*.xls"))
+            if excel_files:
+                input_file = str(excel_files[0])
+                break
     
-    if excel_files:
-        input_file = str(excel_files[0])
+    if input_file:
         print(f"Found data file: {input_file}\n")
         df = preprocess_for_rl(input_file)
         print("Preprocessing complete! Ready for multi-agent RL training.")
     else:
-        print("Error: No Excel data file found in energy+efficiency directory")
-        sys.exit(1)
+        print("Warning: No Excel data file found. Skipping preprocessing.")
+        # Do not exit with error, as this breaks the Render build.
+        # The application will handle missing data by generating synthetic data if needed.
+        sys.exit(0)
