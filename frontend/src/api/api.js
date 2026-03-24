@@ -69,6 +69,17 @@ export async function getStatus() {
 }
 
 /**
+ * Get today's electricity tariff rates for a given provider.
+ * @param {string} provider - 'msedcl' | 'adani' | 'tata' | 'default'
+ * @returns {Promise<Object>}
+ */
+export async function getPriceToday(provider = 'msedcl') {
+  const res = await fetch(`${API_BASE}/price-today?provider=${provider}`);
+  if (!res.ok) throw new Error(`Price fetch failed: ${res.statusText}`);
+  return res.json();
+}
+
+/**
  * Generate a synthetic dataset and use it for future simulations.
  * @param {number} numBuildings
  * @returns {Promise<Object>}

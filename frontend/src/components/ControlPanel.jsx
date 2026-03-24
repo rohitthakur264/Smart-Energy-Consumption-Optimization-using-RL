@@ -11,16 +11,10 @@ export default function ControlPanel({
   const handleProviderChange = (e) => {
     const val = e.target.value;
     setProvider(val);
-    
-    if (val === 'default') {
-      setTariffRates({ peak: 6.5, mid: 4.5, offPeak: 3.5 });
-    } else if (val === 'adani') {
-      // 2024-2025 Adani Electricity Mumbai HT Commercial ToD Tariffs
-      setTariffRates({ peak: 9.50, mid: 8.50, offPeak: 7.75 });
-    } else if (val === 'tata') {
-      // 2024-2025 Tata Power Mumbai Commercial ToD Tariffs (Base energy charges + ToD Adjustment)
-      // Peak (+1.00), Mid (+0.00 / +0.50), Off-Peak (-0.75)
-      setTariffRates({ peak: 8.75, mid: 7.75, offPeak: 7.00 });
+    // Rates are auto-filled from /api/price-today in Dashboard.
+    // Only clear to custom defaults when 'custom' is selected.
+    if (val === 'custom') {
+      setTariffRates({ peak: 9.47, mid: 7.89, offPeak: 6.32 });
     }
   };
   return (
@@ -66,21 +60,27 @@ export default function ControlPanel({
           {/* Electricity Provider */}
           <div className="control-group">
             <label>Electricity Provider</label>
-            <select 
-              value={provider} 
+            <select
+              value={provider}
               onChange={handleProviderChange}
               style={{
-                width: '100%', padding: '10px', 
-                background: 'rgba(255,255,255,0.05)', 
+                width: '100%', padding: '10px',
+                background: 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 color: '#f1f5f9', borderRadius: '8px', outline: 'none'
               }}
             >
-              <option value="default" style={{color: '#000'}}>Standard Universal Rates</option>
-              <option value="adani" style={{color: '#000'}}>Adani Electricity Mumbai</option>
-              <option value="tata" style={{color: '#000'}}>Tata Power Mumbai</option>
-              <option value="custom" style={{color: '#000'}}>Custom Inputs (Advanced)</option>
+              <option value="msedcl"  style={{color: '#000'}}>MSEDCL – Maharashtra (Recommended)</option>
+              <option value="adani"   style={{color: '#000'}}>Adani Electricity Mumbai</option>
+              <option value="tata"    style={{color: '#000'}}>Tata Power Mumbai</option>
+              <option value="default" style={{color: '#000'}}>Standard / Simulation Baseline</option>
+              <option value="custom"  style={{color: '#000'}}>Custom Inputs (Advanced)</option>
             </select>
+            {provider !== 'custom' && (
+              <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px' }}>
+                ✅ Rates auto-loaded from 2024-25 tariff orders
+              </div>
+            )}
           </div>
 
           {provider === 'custom' && (
@@ -110,32 +110,7 @@ export default function ControlPanel({
             </div>
           )}
 
-          {provider === 'custom' && (
-            <div className="control-group" style={{ 
-              background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '8px',
-              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px',
-              marginTop: '-12px'
-            }}>
-              <div>
-                <label style={{ fontSize: '10px' }}>Peak (₹)</label>
-                <input type="number" step="0.5" value={tariffRates.peak} 
-                  onChange={(e) => setTariffRates({...tariffRates, peak: parseFloat(e.target.value) || 0})}
-                  style={{ width: '100%', padding: '4px', background: 'transparent', border: '1px solid #333', color: '#fff', outline: 'none', borderRadius: '4px' }} />
-              </div>
-              <div>
-                <label style={{ fontSize: '10px' }}>Mid (₹)</label>
-                <input type="number" step="0.5" value={tariffRates.mid} 
-                  onChange={(e) => setTariffRates({...tariffRates, mid: parseFloat(e.target.value) || 0})}
-                  style={{ width: '100%', padding: '4px', background: 'transparent', border: '1px solid #333', color: '#fff', outline: 'none', borderRadius: '4px' }} />
-              </div>
-              <div>
-                <label style={{ fontSize: '10px' }}>Off-Peak (₹)</label>
-                <input type="number" step="0.5" value={tariffRates.offPeak} 
-                  onChange={(e) => setTariffRates({...tariffRates, offPeak: parseFloat(e.target.value) || 0})}
-                  style={{ width: '100%', padding: '4px', background: 'transparent', border: '1px solid #333', color: '#fff', outline: 'none', borderRadius: '4px' }} />
-              </div>
-            </div>
-          )}
+
 
           {/* Dataset Generator & Upload */}
           <div className="control-group">

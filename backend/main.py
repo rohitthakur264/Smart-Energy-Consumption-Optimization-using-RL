@@ -35,7 +35,9 @@ app.add_middleware(
 
 # Import and include routers
 from backend.routes.simulation import router as simulation_router
+from backend.routes.price_data import router as price_router
 app.include_router(simulation_router)
+app.include_router(price_router)
 
 @app.get("/api-info")
 def root():
@@ -64,7 +66,13 @@ async def serve_frontend(full_path: str):
     # If frontend build is missing (e.g. Vercel deployment), redirect root to API docs
     if not os.path.exists(dist_dir) or not os.path.exists(os.path.join(dist_dir, "index.html")):
         if full_path == "" or full_path == "/":
-            return RedirectResponse(url="/docs")
+            # Return a JSON response for the root path to prevent the frontend
+            # from receiving HTML from the /docs redirect, which causes a JSON parsing error.
+            return {
+                "message": "Smart Energy API is online. Frontend is hosted separately (e.g., on Vercel).",
+                "status": "ok",
+                "documentation": "/docs"
+            }
         return {"error": "Frontend build not found. API is running. Visit /docs for documentation."}
 
     file_path = os.path.join(dist_dir, full_path)

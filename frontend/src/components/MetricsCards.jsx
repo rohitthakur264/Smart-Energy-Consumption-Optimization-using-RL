@@ -1,21 +1,55 @@
 export default function MetricsCards({ metrics }) {
   if (!metrics) return null;
 
-  const cards = [
-    {
-      icon: '⚡',
-      value: `${metrics.total_energy.toFixed(1)}`,
+  const cards = [];
+  
+  cards.push({
+    icon: '⚡',
+    value: `${metrics.total_energy.toFixed(1)}`,
+    unit: 'kWh',
+    label: 'AI Energy (New)',
+    type: 'energy',
+  });
+
+  if (metrics.baseline_energy !== undefined) {
+    cards.push({
+      icon: '🏢',
+      value: `${metrics.baseline_energy.toFixed(1)}`,
       unit: 'kWh',
-      label: 'Total Energy',
+      label: 'Baseline Energy (Old)',
       type: 'energy',
-    },
-    {
-      icon: '💰',
-      value: `₹${metrics.total_cost.toFixed(2)}`,
+    });
+  }
+
+  if (metrics.baseline_cost !== undefined) {
+    cards.push({
+      icon: '🏛',
+      value: `₹${metrics.baseline_cost.toFixed(2)}`,
       unit: '',
-      label: 'Operating Cost',
-      type: 'cost',
-    },
+      label: 'Baseline Cost (Old)',
+      type: 'reduction',
+    });
+  }
+
+  cards.push({
+    icon: '💰',
+    value: `₹${metrics.total_cost.toFixed(2)}`,
+    unit: '',
+    label: metrics.baseline_cost !== undefined ? 'AI Cost (New)' : 'Operating Cost',
+    type: 'cost',
+  });
+
+  if (metrics.savings !== undefined) {
+    cards.push({
+      icon: '🏆',
+      value: `₹${metrics.savings.toFixed(2)}`,
+      unit: '',
+      label: 'Total Savings',
+      type: 'comfort',
+    });
+  }
+
+  cards.push(
     {
       icon: '📉',
       value: `${metrics.energy_reduction_pct.toFixed(1)}%`,
@@ -31,20 +65,13 @@ export default function MetricsCards({ metrics }) {
       type: 'temp',
     },
     {
-      icon: '😊',
-      value: `${metrics.comfort_score.toFixed(0)}`,
-      unit: '%',
-      label: 'Comfort Score',
-      type: 'comfort',
-    },
-    {
       icon: '🏢',
       value: `${metrics.days_simulated}`,
       unit: 'days',
       label: 'Simulated',
       type: 'efficiency',
-    },
-  ];
+    }
+  );
 
   return (
     <div className="metrics-grid">

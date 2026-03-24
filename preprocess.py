@@ -40,24 +40,17 @@ def load_uci_data(file_path: str) -> pd.DataFrame:
     
     # Column mapping
     column_names = {
-        'X1': 'Relative_Compactness',
-        'X2': 'Surface_Area',
-        'X3': 'Wall_Area',
-        'X4': 'Roof_Area',
-        'X5': 'Overall_Height',
-        'X6': 'Orientation',
-        'X7': 'Glazing_Area',
-        'X8': 'Glazing_Area_Distribution',
-        'y1': 'Heating_Load',
-        'y2': 'Cooling_Load'
+        'X1': 'Relative_Compactness', 'X2': 'Surface_Area',
+        'X3': 'Wall_Area', 'X4': 'Roof_Area',
+        'X5': 'Overall_Height', 'X6': 'Orientation',
+        'X7': 'Glazing_Area', 'X8': 'Glazing_Area_Distribution',
+        'Y1': 'Heating_Load', # Changed from y1
+        'Y2': 'Cooling_Load'  # Changed from y2
     }
     
+    # Rename columns based on the standard UCI dataset format.
+    # This handles both original (X1, Y1) and already-processed names.
     df.rename(columns=column_names, inplace=True, errors='ignore')
-    
-    # Handle case where columns might have spaces or different naming
-    for old_col, new_col in column_names.items():
-        if old_col in df.columns:
-            df.rename(columns={old_col: new_col}, inplace=True)
     
     return df
 

@@ -85,14 +85,16 @@ class RLController:
                 if model is not None:
                     action, _ = model.predict(obs, deterministic=True)
                 else:
-                    # Baseline: Simple Thermostat Control
+                    # Baseline: Proportional Thermostat Control with Deadband
                     indoor_temp = float(env.thermal_model.T_indoor)
-                    if indoor_temp > 24.0:
-                        action = np.array([0.5])  # Cooling
-                    elif indoor_temp < 20.0:
-                        action = np.array([-0.5]) # Heating
+                    error = indoor_temp - 22.0  # target 22C
+                    
+                    if abs(error) < 0.5:
+                        action = np.array([0.0])  # Deadband: do nothing
                     else:
-                        action = np.array([0.0])  # Off
+                        # K_p = 0.08 (gentle correction ~1.5C per hour per degree error)
+                        action_val = np.clip(error * 0.08, -1.0, 1.0)
+                        action = np.array([action_val])
                 
                 obs, reward, terminated, truncated, info = env.step(action)
                 

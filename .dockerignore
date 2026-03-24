@@ -32,11 +32,9 @@ env/
 logs
 *.log
 
-# Data (will be copied separately if needed)
-*.xlsx
-*.csv
-
 # OS
 .DS_Store
 Thumbs.db
 
+# Docs (not needed in container)
+*.md
