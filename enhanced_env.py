@@ -131,7 +131,8 @@ class EnhancedEnergyEnv(gym.Env):
                  uci_data_path: str,
                  use_real_data: bool = True,
                  stochastic: bool = True,
-                 custom_tariffs: dict = None):
+                 custom_tariffs: dict = None,
+                 location: str = "default"):
         """
         Initialize enhanced energy environment.
         
@@ -141,6 +142,8 @@ class EnhancedEnergyEnv(gym.Env):
             stochastic: Enable stochastic elements (occupancy noise, etc.)
         """
         super(EnhancedEnergyEnv, self).__init__()
+        
+        self.location = location
         
         # Load UCI data
         self.df = pd.read_csv(uci_data_path)
@@ -209,13 +212,18 @@ class EnhancedEnergyEnv(gym.Env):
         )
         
         # Initialize thermal model
-        self.thermal_model = ThermalDynamicsModel(self.building_props)
+        self.thermal_model = ThermalDynamicsModel(self.building_props, location=self.location)
         
         # Start hour (deterministic if options provided)
         if options and 'start_hour' in options:
             self.current_hour = options['start_hour'] % 24
         else:
             self.current_hour = 0 # Default to midnight for cleaner dashboarding
+            
+        if options and 'global_hour' in options:
+            self.global_hour = options['global_hour']
+        else:
+            self.global_hour = 0
             
         self.total_steps = 0
         self.max_episode_steps = 24  # One full day
@@ -237,7 +245,7 @@ class EnhancedEnergyEnv(gym.Env):
         occupancy = self.occupancy_model.get_occupancy(self.current_hour, 
                                                         stochastic=self.stochastic)
         tariff = self.get_tariff(self.current_hour)
-        ambient_temp = self.thermal_model.compute_ambient_temp(self.current_hour)
+        ambient_temp = self.thermal_model.compute_ambient_temp(self.current_hour, self.global_hour)
         
         # Normalize hour to [0, 1]
         hour_norm = self.current_hour / 24.0
@@ -263,7 +271,8 @@ class EnhancedEnergyEnv(gym.Env):
         # Simulate thermal dynamics
         thermal_result = self.thermal_model.step(action_clipped, 
                                                   self.current_hour, 
-                                                  occupancy)
+                                                  occupancy,
+                                                  self.global_hour)
         
         # Add slight stochastic sensory noise to temperature for comfort realism
         if self.stochastic:
@@ -300,6 +309,7 @@ class EnhancedEnergyEnv(gym.Env):
         
         # Update time
         self.current_hour = (self.current_hour + 1) % 24
+        self.global_hour += 1
         self.total_steps += 1
         
         terminated = self.total_steps >= self.max_episode_steps

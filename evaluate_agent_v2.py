@@ -302,7 +302,7 @@ class AdvancedEvaluator:
                     fontsize=14, fontweight='bold', y=0.995)
         
         plt.savefig(self.output_dir / save_name, dpi=300, bbox_inches='tight')
-        print(f"✓ Plot saved: {self.output_dir / save_name}")
+        print(f"[OK] Plot saved: {self.output_dir / save_name}")
         plt.close()
     
     def plot_multi_agent_results(self, metrics: dict, save_name: str = "multi_agent_evaluation.png"):
@@ -413,7 +413,7 @@ class AdvancedEvaluator:
                     fontsize=14, fontweight='bold', y=0.995)
         
         plt.savefig(self.output_dir / save_name, dpi=300, bbox_inches='tight')
-        print(f"✓ Plot saved: {self.output_dir / save_name}")
+        print(f"[OK] Plot saved: {self.output_dir / save_name}")
         plt.close()
 
 

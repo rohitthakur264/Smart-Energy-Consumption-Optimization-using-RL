@@ -103,7 +103,8 @@ class MultiAgentTrainer:
                 ent_coef=self.config['ent_coef'],
                 verbose=1,
                 tensorboard_log=log_path,
-                policy_kwargs={'net_arch': [256, 256]}
+                policy_kwargs={'net_arch': [256, 256]},
+                device='cuda'
             )
         else:
             model = A2C(
@@ -114,7 +115,8 @@ class MultiAgentTrainer:
                 ent_coef=self.config['ent_coef'],
                 verbose=1,
                 tensorboard_log=log_path,
-                policy_kwargs={'net_arch': [256, 256]}
+                policy_kwargs={'net_arch': [256, 256]},
+                device='cuda'
             )
         
         # Callbacks
@@ -135,7 +137,7 @@ class MultiAgentTrainer:
         # Save final model
         model_path = os.path.join(self.model_dir, f'ppo_enhanced_{self.agent_type}_final')
         model.save(model_path)
-        print(f"\n✓ Single-agent model saved: {model_path}")
+        print(f"\n[OK] Single-agent model saved: {model_path}")
         
         # Save config
         config_path = os.path.join(self.model_dir, 'single_agent_config.json')
@@ -224,7 +226,8 @@ class MultiAgentTrainer:
                 gamma=self.config['gamma'],
                 verbose=1,
                 tensorboard_log=log_path,
-                policy_kwargs={'net_arch': [128, 128]}
+                policy_kwargs={'net_arch': [128, 128]},
+                device='cuda'
             )
             
             # Train
@@ -234,7 +237,7 @@ class MultiAgentTrainer:
             # Save model
             model_path = os.path.join(self.model_dir, f'ppo_multi_agent_{agent_name}')
             model.save(model_path)
-            print(f"✓ {agent_name} model saved: {model_path}")
+            print(f"[OK] {agent_name} model saved: {model_path}")
             
             agents[agent_name] = model
             env.close()
@@ -244,7 +247,7 @@ class MultiAgentTrainer:
         with open(config_path, 'w') as f:
             json.dump(self.config, f, indent=2)
         
-        print("\n✓ Multi-agent training complete!")
+        print("\n[DONE] Multi-agent training complete!")
         return agents
 
 

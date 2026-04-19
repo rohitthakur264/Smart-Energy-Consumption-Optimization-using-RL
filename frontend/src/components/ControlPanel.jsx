@@ -5,16 +5,16 @@ export default function ControlPanel({
   provider, setProvider,
   tariffRates, setTariffRates,
   onGenerateDataset, generatingDataset,
-  onUploadDataset, uploadingDataset
+  onUploadDataset, uploadingDataset,
+  location, setLocation,
+  baseEnergy, setBaseEnergy
 }) {
   
   const handleProviderChange = (e) => {
     const val = e.target.value;
     setProvider(val);
-    // Rates are auto-filled from /api/price-today in Dashboard.
-    // Only clear to custom defaults when 'custom' is selected.
     if (val === 'custom') {
-      setTariffRates({ peak: 9.47, mid: 7.89, offPeak: 6.32 });
+      setTariffRates({ peak: 0.25, mid: 0.15, offPeak: 0.10 });
     }
   };
   return (
@@ -57,6 +57,26 @@ export default function ControlPanel({
             </div>
           </div>
 
+          {/* Location Toggle */}
+          <div className="control-group">
+            <label>Geographic Location</label>
+            <select
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              style={{
+                width: '100%', padding: '10px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#f1f5f9', borderRadius: '8px', outline: 'none',
+                marginBottom: '8px'
+              }}
+            >
+              <option value="default" style={{color: '#000'}}>🌐 Standard (Synthetic Weather)</option>
+              <option value="north" style={{color: '#000'}}>🏔️ North India (Delhi - Extreme Seasons)</option>
+              <option value="south" style={{color: '#000'}}>🌴 South India (Chennai - High Cooling)</option>
+            </select>
+          </div>
+
           {/* Electricity Provider */}
           <div className="control-group">
             <label>Electricity Provider</label>
@@ -70,17 +90,35 @@ export default function ControlPanel({
                 color: '#f1f5f9', borderRadius: '8px', outline: 'none'
               }}
             >
-              <option value="msedcl"  style={{color: '#000'}}>MSEDCL – Maharashtra (Recommended)</option>
-              <option value="adani"   style={{color: '#000'}}>Adani Electricity Mumbai</option>
-              <option value="tata"    style={{color: '#000'}}>Tata Power Mumbai</option>
-              <option value="default" style={{color: '#000'}}>Standard / Simulation Baseline</option>
-              <option value="custom"  style={{color: '#000'}}>Custom Inputs (Advanced)</option>
+              <option value="global" style={{color: '#000'}}>Global Average ToD Pricing</option>
+              <option value="custom" style={{color: '#000'}}>Custom Inputs (Advanced)</option>
             </select>
             {provider !== 'custom' && (
               <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px' }}>
-                ✅ Rates auto-loaded from 2024-25 tariff orders
+                ✅ Worldwide Time-of-Use baseline rates
               </div>
             )}
+          </div>
+
+          {/* Base Energy Usage Input for Temperature Impact */}
+          <div className="control-group">
+            <label>Baseline Energy (kWh)</label>
+            <input
+              type="number"
+              min="1"
+              max="24"
+              value={baseEnergy}
+              onChange={(e) => setBaseEnergy(Number(e.target.value))}
+              style={{
+                width: '100%', padding: '10px',
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: '#f1f5f9', borderRadius: '8px', outline: 'none'
+              }}
+            />
+            <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '4px' }}>
+                Estimates base kWh for climate scaling
+            </div>
           </div>
 
           {provider === 'custom' && (

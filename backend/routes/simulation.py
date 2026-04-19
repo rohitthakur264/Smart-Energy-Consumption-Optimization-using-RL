@@ -66,7 +66,7 @@ def get_controller():
 
             print("Initializing RLController...")
             controller = RLController(DATA_PATH, model_paths)
-            print("✓ RLController initialized successfully.")
+            print("[OK] RLController initialized successfully.")
 
         except Exception as e:
             print(f"FATAL: Failed to initialize RLController: {e}")
@@ -92,13 +92,15 @@ async def run_simulation(
     peak_rate: float = 6.50,
     mid_rate: float = 4.50,
     off_peak_rate: float = 3.50,
+    location: str = "default"
 ):
     try:
         c = get_controller()
         return c.run_simulation(num_days, use_model, model_name,
                                 peak_rate=peak_rate,
                                 mid_rate=mid_rate,
-                                off_peak_rate=off_peak_rate)
+                                off_peak_rate=off_peak_rate,
+                                location=location)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Simulation failed: {str(e)}")
 
@@ -109,6 +111,22 @@ async def evaluate_model(model_name: str = "enhanced", num_episodes: int = 5):
         return c.run_evaluation(model_name, num_episodes)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
+
+@router.get("/metrics")
+async def get_accuracy_metrics():
+    try:
+        c = get_controller()
+        return c.get_accuracy_metrics()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")
+
+@router.get("/training-progress")
+async def get_training_progress():
+    try:
+        c = get_controller()
+        return c.get_training_progress()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get training progress: {str(e)}")
 
 @router.get("/compare")
 async def compare_models(num_days: int = 3):

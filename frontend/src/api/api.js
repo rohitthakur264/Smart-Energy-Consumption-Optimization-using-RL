@@ -13,7 +13,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '/api';
  * @param {string} modelName - which model to use
  * @returns {Promise<{hourly_data: Array, metrics: Object}>}
  */
-export async function runSimulation(numDays = 5, useModel = false, modelName = 'enhanced', rates = { peak: 5.0, mid: 3.5, offPeak: 2.0 }) {
+export async function runSimulation(numDays = 5, useModel = false, modelName = 'enhanced', rates = { peak: 5.0, mid: 3.5, offPeak: 2.0 }, location = 'default') {
   const params = new URLSearchParams({
     num_days: numDays,
     use_model: useModel,
@@ -21,6 +21,7 @@ export async function runSimulation(numDays = 5, useModel = false, modelName = '
     peak_rate: rates.peak,
     mid_rate: rates.mid,
     off_peak_rate: rates.offPeak,
+    location: location
   });
   
   const res = await fetch(`${API_BASE}/simulate?${params}`);
@@ -69,6 +70,26 @@ export async function getStatus() {
 }
 
 /**
+ * Get Previous RL model accuracy metrics.
+ * @returns {Promise<Object>}
+ */
+export async function getAccuracyMetrics() {
+  const res = await fetch(`${API_BASE}/metrics`);
+  if (!res.ok) return null; // Fallback gracefully if endpoint isn't ready
+  return res.json();
+}
+
+/**
+ * Get Training Convergence progress.
+ * @returns {Promise<Object>}
+ */
+export async function getTrainingProgress() {
+  const res = await fetch(`${API_BASE}/training-progress`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/**
  * Get today's electricity tariff rates for a given provider.
  * @param {string} provider - 'msedcl' | 'adani' | 'tata' | 'default'
  * @returns {Promise<Object>}
@@ -108,5 +129,75 @@ export async function uploadDataset(file) {
     const data = await res.json().catch(() => ({}));
     throw new Error(data.detail || `Upload failed: ${res.statusText}`);
   }
+  return res.json();
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  Energy Prediction API (Multi-Modal Model)
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Predict energy consumption for a device.
+ */
+export async function predictEnergy({ temperature, starRating, deviceType, city, usageHours = 4, humidity = 65, month = 6 }) {
+  const params = new URLSearchParams({
+    temperature,
+    star_rating: starRating,
+    device_type: deviceType,
+    city,
+    usage_hours: usageHours,
+    humidity,
+    month,
+  });
+  const res = await fetch(`${API_BASE}/predict?${params}`);
+  if (!res.ok) throw new Error(`Prediction failed: ${res.statusText}`);
+  return res.json();
+}
+
+/**
+ * Compare Mumbai vs Satara energy consumption.
+ */
+export async function compareCities() {
+  const res = await fetch(`${API_BASE}/compare-cities`);
+  if (!res.ok) throw new Error(`City comparison failed: ${res.statusText}`);
+  return res.json();
+}
+
+/**
+ * Get trained model accuracy metrics (R², MAE, RMSE).
+ */
+export async function getModelMetrics() {
+  const res = await fetch(`${API_BASE}/model-metrics`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/**
+ * Get energy vs temperature impact for a device.
+ */
+export async function getTemperatureImpact(deviceType = 'Air Conditioner', city = 'Mumbai') {
+  const params = new URLSearchParams({ device_type: deviceType, city });
+  const res = await fetch(`${API_BASE}/temperature-impact?${params}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/**
+ * Get energy vs star rating for a device.
+ */
+export async function getStarImpact(deviceType = 'Air Conditioner') {
+  const params = new URLSearchParams({ device_type: deviceType });
+  const res = await fetch(`${API_BASE}/star-impact?${params}`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
+/**
+ * Get list of available device types.
+ */
+export async function getAvailableDevices() {
+  const res = await fetch(`${API_BASE}/available-devices`);
+  if (!res.ok) return { devices: [] };
   return res.json();
 }

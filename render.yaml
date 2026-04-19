@@ -1,11 +1,10 @@
 services:
   - type: web
-    name: smart-energy-api
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: .
+    name: smart-energy-backend
+    env: docker
+    region: oregon
+    plan: free # Note: The free tier might crash with PyTorch/RL due to memory limits.
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: PORT
-        value: "8000"
-    healthCheckPath: /health
-    plan: free
+        value: 8000

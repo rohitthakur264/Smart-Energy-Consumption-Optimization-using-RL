@@ -36,8 +36,10 @@ app.add_middleware(
 # Import and include routers
 from backend.routes.simulation import router as simulation_router
 from backend.routes.price_data import router as price_router
+from backend.routes.prediction import router as prediction_router
 app.include_router(simulation_router)
 app.include_router(price_router)
+app.include_router(prediction_router)
 
 @app.get("/api-info")
 def root():

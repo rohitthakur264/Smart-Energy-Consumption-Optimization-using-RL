@@ -6,6 +6,8 @@ Based on IEEE standards and ASHRAE guidelines.
 import numpy as np
 from dataclasses import dataclass
 from scipy.integrate import odeint
+import os
+import pandas as pd
 
 @dataclass
 class BuildingThermalProperties:
@@ -71,12 +73,26 @@ class ThermalDynamicsModel:
     - Q_HVAC: HVAC system output [W]
     """
     
-    def __init__(self, building_props: BuildingThermalProperties):
+    def __init__(self, building_props: BuildingThermalProperties, location: str = "default"):
         self.props = building_props
         self.ua = building_props.compute_ua()  # [W/K]
         self.capacity = building_props.compute_thermal_capacity()  # [J/K]
         self.T_indoor = 22.0  # Initial indoor temperature [°C]
         self.dt = 3600  # Timestep: 1 hour [seconds]
+        self.location = location
+        
+        # Load weather dataset based on location
+        self.weather_data = None
+        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+        
+        if self.location == "north":
+            path = os.path.join(data_dir, "north_india_weather.csv")
+            if os.path.exists(path):
+                self.weather_data = pd.read_csv(path)['temperature'].values
+        elif self.location == "south":
+            path = os.path.join(data_dir, "south_india_weather.csv")
+            if os.path.exists(path):
+                self.weather_data = pd.read_csv(path)['temperature'].values
         
     def compute_solar_gain(self, hour: int, occupancy: float) -> float:
         """
@@ -95,11 +111,16 @@ class ThermalDynamicsModel:
         
         return solar_gain + internal_gains
     
-    def compute_ambient_temp(self, hour: int, day: int = 0) -> float:
+    def compute_ambient_temp(self, hour: int, global_hour: int = 0) -> float:
         """
         Realistic ambient temperature profile.
-        Sinusoidal day-night cycle with seasonal variation.
+        Uses actual historical India weather dataset if available.
+        Otherwise falls back to synthetic sinusoidal cycle.
         """
+        if self.weather_data is not None:
+            idx = int(global_hour) % len(self.weather_data)
+            return float(self.weather_data[idx])
+            
         # Base ambient temp pattern: min at 6 AM, max at 2 PM
         temp_min = 10.0  # Min ambient [°C]
         temp_max = 32.0  # Max ambient [°C]
@@ -152,13 +173,13 @@ class ThermalDynamicsModel:
         energy_kwh = electrical_power / 1000 * 1  # [kWh] for 1 hour
         return energy_kwh
     
-    def step(self, control_signal: float, hour: int, occupancy: float) -> dict:
+    def step(self, control_signal: float, hour: int, occupancy: float, global_hour: int = 0) -> dict:
         """
         Single timestep thermal simulation.
         Returns state, energy consumption, and thermal comfort metrics.
         """
         # Compute environmental inputs
-        ambient_temp = self.compute_ambient_temp(hour)
+        ambient_temp = self.compute_ambient_temp(hour, global_hour)
         internal_gains = self.compute_solar_gain(hour, occupancy)
         hvac_power = self.hvac_power_output(control_signal)
         

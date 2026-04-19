@@ -1,0 +1,33 @@
+{
+    "ensemble_r2": 0.9967808675371005,
+    "ensemble_mae": 0.23204567161877945,
+    "ensemble_rmse": 0.6342681170243855,
+    "feature_names": [
+        "month",
+        "temperature_celsius",
+        "humidity_percent",
+        "star_rating",
+        "usage_hours",
+        "temp_x_star",
+        "temp_x_usage",
+        "star_x_usage",
+        "temp_squared",
+        "humidity_x_temp",
+        "device_type_Air Conditioner",
+        "device_type_Ceiling Fan",
+        "device_type_Desktop Computer",
+        "device_type_Iron",
+        "device_type_LED TV",
+        "device_type_Microwave Oven",
+        "device_type_Refrigerator",
+        "device_type_Room Heater",
+        "device_type_Washing Machine",
+        "device_type_Water Heater (Geyser)",
+        "city_Mumbai",
+        "city_Satara"
+    ],
+    "num_train_samples": 9600,
+    "num_test_samples": 2400,
+    "total_samples": 12000,
+    "training_device": "cuda"
+}

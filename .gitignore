@@ -16,6 +16,7 @@ npm-debug.log*
 
 # Uploads and temporary data
 uploads/
+logs/
 synthetic_energy_data.csv
 adani_synthetic_dataset.csv
 
